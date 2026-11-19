@@ -9,9 +9,25 @@
 #include <fcntl.h>
 #include <signal.h>
 
-// Global: last exit status (shown in prompt)
 int last_status = 0;
 
+
+// Returns a NULL-terminated array of argument strings
+// The returned array must be free()'d by the caller
+char **parse_args(char *line) {
+    int max = 128;
+    char **argv = malloc(max * sizeof(char *));
+    int argc = 0;
+
+    // strtok splits on spaces and tabs
+    char *token = strtok(line, " \t\n");
+    while (token != NULL && argc < max - 1) {
+        argv[argc++] = token;
+        token = strtok(NULL, " \t\n");   // NULL = continue from last position
+    }
+    argv[argc] = NULL;    // MUST end with NULL (execvp requires this)
+    return argv;
+}
 int main(void) {
     char *line = NULL;    // getline will allocate this
     size_t len  = 0;      // getline will set this
@@ -36,7 +52,15 @@ int main(void) {
             break;            // exit cleanly
         }
 
-        // TODO: we'll add parsing and execution below
+                char **argv = parse_args(line);
+
+        if (argv[0] == NULL) {    // blank line — skip it
+            free(argv);
+            continue;
+        }
+
+        // TODO: execute argv
+        free(argv);
     }
 
     return 0;
